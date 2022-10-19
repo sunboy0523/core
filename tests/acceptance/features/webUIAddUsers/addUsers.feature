@@ -68,6 +68,7 @@ Feature: add users
   @smokeTest @skipOnLDAP
   Scenario: use the webUI to create a simple user with an Email address but without a password
     When the administrator creates a user with the name "guiusr1" and the email "guiusr1@owncloud" without a password using the webUI
+    When the administrator creates a user with the name "guiusr2" and the email "guiusr2@owncloud" without a password using the webUI
     Then the email address "guiusr1@owncloud" should have received an email with the body containing
       """
       just letting you know that you now have an %productname% account.

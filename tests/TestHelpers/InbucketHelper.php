@@ -48,9 +48,28 @@ class InbucketHelper {
 			null,
 			['Content-Type' => 'application/json']
 		);
-
-		$json = json_decode($response->getBody()->getContents(), true);
+		$json = json_decode($response->getBody()->getContents());
 		return $json;
+	}
+
+	/**
+	 *
+	 * @param string|null $localInbucketUrl
+	 * @param string|null $xRequestId
+	 * @param string $mailbox
+	 *
+	 * @return ResponseInterface
+	 * @throws GuzzleException
+	 */
+	public static function deleteAllEmails(
+		?string $localInbucketUrl,
+		?string $xRequestId,
+		?string $mailbox
+	):ResponseInterface {
+		return HttpRequestHelper::delete(
+			$localInbucketUrl . "/api/v1/mailbox/" .$mailbox,
+			$xRequestId
+		);
 	}
 
 
@@ -64,10 +83,6 @@ class InbucketHelper {
 	 * @throws GuzzleException
 	 */
 	public static function getBodyContentWithID (array $mailboxes, string $mailboxid) {
-		var_dump(
-			$mailboxes[0],
-			$mailboxid
-		);
 		$response = HttpRequestHelper::get(
 			"http://localhost:9100" . "/api/v1/mailbox/${mailboxes[0]}/" . $mailboxid,
 			null,
@@ -78,5 +93,51 @@ class InbucketHelper {
 
 		$json = json_decode($response->getBody()->getContents());
 		return $json;
+	}
+
+
+	/**
+	 * Returns the host name or address of the Mailhog server as seen from the
+	 * point of view of the system-under-test.
+	 *
+	 * @return string
+	 */
+	public static function getInbucketHost():string {
+		$inbucketHost = \getenv('INBUCKET_HOST');
+		if ($inbucketHost === false) {
+			$inbucketHost = "127.0.0.1";
+		}
+		return $inbucketHost;
+	}
+
+
+	/**
+	 * Returns the host name or address of the Mailhog server as seen from the
+	 * point of view of the test runner.
+	 *
+	 * @return string
+	 */
+	public static function getLocalInbucketHost():string {
+		$localInbucketHost = \getenv('LOCAL_INBUCKET_HOST');
+		if ($localInbucketHost === false) {
+			$localInbucketHost = self::getInbucketHost();
+		}
+		return $localInbucketHost;
+	}
+
+	/**
+	 * Returns the host and port where Mailhog messages can be read and deleted
+	 * by the test runner.
+	 *
+	 * @return string
+	 */
+	public static function getLocalInbucketMailUrl():string {
+		$localInbucketHost = self::getLocalInbucketHost();
+
+		$inbucketPort = \getenv('INBUCKET_PORT');
+		if ($inbucketPort === false) {
+			$inbucketPort = "9100";
+		}
+		return "http://$localInbucketHost:$inbucketPort";
 	}
 }

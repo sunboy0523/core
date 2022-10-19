@@ -34,6 +34,7 @@ require_once 'bootstrap.php';
  */
 class EmailContext implements Context {
 	private $localMailhogUrl = null;
+	private $localInbucketUrl = null;
 
 	/**
 	 *
@@ -46,6 +47,13 @@ class EmailContext implements Context {
 	 */
 	public function getLocalMailhogUrl():string {
 		return $this->localMailhogUrl;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getLocalInbucketUrl():string {
+		return $this->localInbucketUrl;
 	}
 
 	/**
@@ -64,27 +72,20 @@ class EmailContext implements Context {
 			$sender
 		);
 		$mailBoxIds = InbucketHelper::getMailboxIds($emailRecipents);
-		$emailBody = InbucketHelper::getBodyContentWithID($emailRecipents, $mailBoxIds[0]["id"]);
-		var_dump(
-			$emailBody
-		);
 
-
+		$emailBody = InbucketHelper::getBodyContentWithID($emailRecipents, $mailBoxIds[0]->id);
 
 //		$emailBody = EmailHelper::getBodyOfLastEmail(
 //			$this->localMailhogUrl,
 //			$address,
 //			$this->featureContext->getStepLineRef()
 //		);
-//		var_dump(
-//			$emailBody
-//		);
-//		Assert::assertStringContainsString(
-//			$expectedContent,
-//			$emailBody,
-//			"The email address {$address} should have received an email with the body containing {$expectedContent}
-//			but the received email is {$emailBody}"
-//		);
+		Assert::assertStringContainsString(
+			$expectedContent,
+			$emailBody->body->text,
+			"The email address {$address} should have received an email with the body containing {$expectedContent}
+			but the received email is {$emailBody->body->text}"
+		);
 	}
 
 	/**
@@ -186,9 +187,35 @@ class EmailContext implements Context {
 		$environment = $scope->getEnvironment();
 		// Get all the contexts you need in this context
 		$this->featureContext = $environment->getContext('FeatureContext');
-		$this->localMailhogUrl = EmailHelper::getLocalMailhogUrl();
-		$this->clearMailHogMessages();
+		$this->localInbucketUrl = InbucketHelper::getLocalInbucketMailUrl();
 	}
+
+
+	/**
+	 *
+	 * @AfterScenario @mailhog
+	 *
+	 * @return void
+	 */
+	public function clearInbucketMessages():void {
+		try {
+
+			foreach ($this->featureContext->emailRecipients as $emailRecipent){
+				InbucketHelper::deleteAllEmails(
+					$this->getLocalInbucketUrl(),
+					$this->featureContext->getStepLineRef(),
+					$emailRecipent
+				);
+			}
+
+		} catch (Exception $e) {
+			echo __METHOD__ .
+				" could not delete mailhog messages, is mailhog set up?\n" .
+				$e->getMessage();
+		}
+	}
+
+
 
 	/**
 	 *
