@@ -35,14 +35,14 @@ class InbucketHelper {
 	/**
 	 * retrieving emails sent from mailhog
 	 *
-	 * @param array $mailboxes
+	 * @param string $mailbox
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getMailboxIds (array $mailboxes) {
+	public static function getMailboxes (string $mailbox) {
 		$response = HttpRequestHelper::get(
-			 "http://localhost:9100" . "/api/v1/mailbox/${mailboxes[0]}",
+			 "http://localhost:9100" . "/api/v1/mailbox/${mailbox}",
 			null,
 			null,
 			null,
@@ -50,6 +50,23 @@ class InbucketHelper {
 		);
 		$json = json_decode($response->getBody()->getContents());
 		return $json;
+	}
+
+	/**
+	 * retrieving emails sent from mailhog
+	 *
+	 * @param string $mailbox
+	 *
+	 * @return mixed JSON encoded contents
+	 * @throws GuzzleException
+	 */
+	public static function getMailboxIds (string $mailbox) {
+		$mailboxemailsmetainfo = self::getMailboxes($mailbox);
+		$mailboxIds = [];
+		for ($i = 0; $i < sizeof($mailboxemailsmetainfo); $i++) {
+			$mailboxIds[] = $mailboxemailsmetainfo[$i]->id;
+		}
+		return $mailboxIds;
 	}
 
 	/**
@@ -77,14 +94,14 @@ class InbucketHelper {
 	 * retrieving emails sent from mailhog
 	 *
 	 * @param string $mailboxid
-	 * @param array $mailboxes
+	 * @param string $mailbox
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getBodyContentWithID (array $mailboxes, string $mailboxid) {
+	public static function getBodyContentWithID (string $mailbox, string $mailboxid) {
 		$response = HttpRequestHelper::get(
-			"http://localhost:9100" . "/api/v1/mailbox/${mailboxes[0]}/" . $mailboxid,
+			"http://localhost:9100" . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
 			null,
 			null,
 			null,
@@ -93,6 +110,34 @@ class InbucketHelper {
 
 		$json = json_decode($response->getBody()->getContents());
 		return $json;
+	}
+
+	/**
+	 *
+	 * @param string|null $localMailhogUrl
+	 * @param string|null $emailAddress
+	 * @param string|null $xRequestId
+	 * @param array $mailboxes
+	 *
+	 * @return string
+	 * @throws GuzzleException
+	 * @throws Exception
+	 */
+	public static function getBodyOfLastEmail(
+		?string $localMailhogUrl,
+		?string $emailAddress,
+		?string $xRequestId = '',
+		array $mailboxes
+//		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
+	) {
+		foreach ($mailboxes as $mailbox){
+			$mailboxIds = self::getMailboxIds($mailbox);
+			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - 1]);
+			if(str_contains($response->to[0], $emailAddress)){
+				return $response->body->text;
+			}
+		}
+		throw new Exception("Could not find the email to the address: " . $emailAddress);
 	}
 
 

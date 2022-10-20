@@ -811,13 +811,15 @@ class WebUILoginContext extends RawMinkContext implements Context {
 	 *
 	 * @return void
 	 * @throws Exception
+	 * @throws \GuzzleHttp\Exception\GuzzleException
 	 */
 	public function theUserFollowsThePasswordSetLinkReceivedByEmail(string $emailAddress, int $numEmails = 1):void {
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
 		$this->webUIGeneralContext->followLinkFromEmail(
 			$emailAddress,
 			"/Access it: (http.*)/",
-			"Couldn't find password set link in the email",
-			$numEmails
+			"Couldn't find password set link in the email"
 		);
 	}
 

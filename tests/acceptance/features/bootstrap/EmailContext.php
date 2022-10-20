@@ -60,32 +60,40 @@ class EmailContext implements Context {
 	 * @param string $address
 	 * @param PyStringNode $content
 	 * @param string|null $sender
-	 * @param array $emailRecipents
 	 *
 	 * @return void
 	 * @throws Exception
 	 */
-	public function assertThatEmailContains(string $address, PyStringNode $content, ?string $sender = null, ?array $emailRecipents = null):void {
+	public function assertThatEmailContains(string $address, PyStringNode $content, ?string $sender = null):void {
 		$expectedContent = \str_replace("\r\n", "\n", $content->getRaw());
 		$expectedContent = $this->featureContext->substituteInLineCodes(
 			$expectedContent,
 			$sender
 		);
-		$mailBoxIds = InbucketHelper::getMailboxIds($emailRecipents);
 
-		$emailBody = InbucketHelper::getBodyContentWithID($emailRecipents, $mailBoxIds[0]->id);
+		$splitEmailForUserMailBox =  explode("@", $address);
+		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
+		$expectedBodyFromLastEmail = null;
+		// get all mailbox ids from all mailbox (in case of multiple user)
+		$expectedBodyFromLastEmail = InbucketHelper::getBodyOfLastEmail($this->localInbucketUrl,$address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
+		Assert::assertStringContainsString(
+			$expectedContent,
+			$expectedBodyFromLastEmail,
+			"The email address {$address} should have received an email with the body containing {$expectedContent}
+			but the received email is {$expectedBodyFromLastEmail}"
+		);
 
 //		$emailBody = EmailHelper::getBodyOfLastEmail(
 //			$this->localMailhogUrl,
 //			$address,
 //			$this->featureContext->getStepLineRef()
 //		);
-		Assert::assertStringContainsString(
-			$expectedContent,
-			$emailBody->body->text,
-			"The email address {$address} should have received an email with the body containing {$expectedContent}
-			but the received email is {$emailBody->body->text}"
-		);
+//		Assert::assertStringContainsString(
+//			$expectedContent,
+//			$emailBody,
+//			"The email address {$address} should have received an email with the body containing {$expectedContent}
+//			but the received email is {$emailBody}"
+//		);
 	}
 
 	/**
@@ -115,7 +123,7 @@ class EmailContext implements Context {
 	 */
 	public function emailAddressShouldHaveReceivedAnEmailWithBodyContaining(string $address, PyStringNode $content, ?string $user = null):void {
 		$user= $this->featureContext->getActualUsername($user);
-		$this->assertThatEmailContains($address, $content, $user, $this->featureContext->emailRecipients);
+		$this->assertThatEmailContains($address, $content, $user);
 	}
 
 	/**
@@ -188,12 +196,13 @@ class EmailContext implements Context {
 		// Get all the contexts you need in this context
 		$this->featureContext = $environment->getContext('FeatureContext');
 		$this->localInbucketUrl = InbucketHelper::getLocalInbucketMailUrl();
+//		$this->localMailhogUrl= EmailHelper::getLocalMailhogUrl();
 	}
 
 
 	/**
 	 *
-	 * @AfterScenario @mailhog
+	 * @AfterScenario  @mailhog
 	 *
 	 * @return void
 	 */
