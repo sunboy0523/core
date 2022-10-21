@@ -679,6 +679,8 @@ class WebUILoginContext extends RawMinkContext implements Context {
 	public function theUserFollowsThePasswordResetLinkFromTheirEmail(string $user):void {
 		$user = $this->featureContext->getActualUsername($user);
 		$emailAddress = $this->featureContext->getEmailAddressForUser($user);
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
 		$this->webUIGeneralContext->followLinkFromEmail(
 			$emailAddress,
 			"/Use the following link to reset your password: (http.*)/",
@@ -700,6 +702,8 @@ class WebUILoginContext extends RawMinkContext implements Context {
 	):void {
 		$user = $this->featureContext->getActualUsername($user);
 		$emailAddress = $this->featureContext->getEmailAddressForUser($user);
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
 		$link = $this->webUIGeneralContext->getLinkFromEmail(
 			$emailAddress,
 			"/Use the following link to reset your password: (http.*)/",
@@ -727,6 +731,8 @@ class WebUILoginContext extends RawMinkContext implements Context {
 	):void {
 		$user = $this->featureContext->getActualUsername($user);
 		$emailAddress = $this->featureContext->getEmailAddressForUser($user);
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
 		$link = $this->webUIGeneralContext->getLinkFromEmail(
 			$emailAddress,
 			"/Use the following link to reset your password: (http.*)/",
@@ -815,11 +821,14 @@ class WebUILoginContext extends RawMinkContext implements Context {
 	 */
 	public function theUserFollowsThePasswordSetLinkReceivedByEmail(string $emailAddress, int $numEmails = 1):void {
 		$splitEmailForUserMailBox =  explode("@", $emailAddress);
-		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
+		if(!in_array($splitEmailForUserMailBox[0] , $this->featureContext->emailRecipients)){
+			$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
+		}
 		$this->webUIGeneralContext->followLinkFromEmail(
 			$emailAddress,
 			"/Access it: (http.*)/",
-			"Couldn't find password set link in the email"
+			"Couldn't find password set link in the email",
+			$numEmails
 		);
 	}
 

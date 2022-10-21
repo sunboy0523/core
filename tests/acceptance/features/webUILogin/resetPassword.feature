@@ -1,4 +1,4 @@
-@webUI @insulated @disablePreviews @mailhog
+@webUI @insulated @disablePreviews @inbucket
 Feature: reset the password
   As a user
   I want to reset my password
@@ -20,7 +20,7 @@ Feature: reset the password
       """
     And the email address of user "Alice" should have received an email with the body containing
       """
-      Use the following link to reset your password: <a href=
+      Use the following link to reset your password:
       """
 
   @skipOnEncryption @smokeTest @skipOnLDAP @mobileResolutionTest

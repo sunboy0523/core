@@ -73,8 +73,7 @@ class EmailContext implements Context {
 
 		$splitEmailForUserMailBox =  explode("@", $address);
 		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
-		$expectedBodyFromLastEmail = null;
-		// get all mailbox ids from all mailbox (in case of multiple user)
+
 		$expectedBodyFromLastEmail = InbucketHelper::getBodyOfLastEmail($this->localInbucketUrl,$address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
 		Assert::assertStringContainsString(
 			$expectedContent,
@@ -152,10 +151,11 @@ class EmailContext implements Context {
 	public function theResetEmailSenderEmailAddressShouldBe(string $user, string $senderAddress):void {
 		$user = $this->featureContext->getActualUsername($user);
 		$receiverAddress = $this->featureContext->getEmailAddressForUser($user);
-		$actualSenderAddress = EmailHelper::getSenderOfEmail(
-			$this->localMailhogUrl,
+		$actualSenderAddress = InbucketHelper::getSenderOfEmail(
+			$this->getLocalInbucketUrl(),
 			$receiverAddress,
-			$this->featureContext->getStepLineRef()
+			$this->featureContext->getStepLineRef(),
+			$this->featureContext->emailRecipients
 		);
 		Assert::assertStringContainsString(
 			$senderAddress,
@@ -173,11 +173,14 @@ class EmailContext implements Context {
 	 * @throws Exception
 	 */
 	public function assertThatEmailDoesntExistWithTheAddress(string $address):void {
+		$splitEmailForUserMailBox =  explode("@", $address);
+		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
 		Assert::assertFalse(
-			EmailHelper::emailReceived(
-				EmailHelper::getLocalMailhogUrl(),
+			InbucketHelper::emailReceived(
+				InbucketHelper::getLocalInbucketMailUrl(),
 				$address,
-				$this->featureContext->getStepLineRef()
+				$this->featureContext->getStepLineRef(),
+				$this->featureContext->emailRecipients
 			),
 			"Email exists with email address: {$address} but was not expected to be."
 		);
@@ -223,8 +226,6 @@ class EmailContext implements Context {
 				$e->getMessage();
 		}
 	}
-
-
 
 	/**
 	 *

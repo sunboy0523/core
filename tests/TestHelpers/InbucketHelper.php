@@ -113,11 +113,33 @@ class InbucketHelper {
 	}
 
 	/**
+	 * retrieving emails sent from mailhog
+	 *
+	 * @param string $mailbox
+	 *
+	 * @return mixed JSON encoded contents
+	 * @throws GuzzleException
+	 */
+	public static function getMailbox (string $mailbox) {
+		$response = HttpRequestHelper::get(
+			"http://localhost:9100" . "/api/v1/mailbox/${mailbox}/",
+			null,
+			null,
+			null,
+			['Content-Type' => 'application/json']
+		);
+
+		$json = json_decode($response->getBody()->getContents());
+		return $json;
+	}
+
+	/**
 	 *
 	 * @param string|null $localMailhogUrl
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId
-	 * @param array $mailboxes
+	 * @param array $mailboxes,
+	 * @param int $emailNumber
 	 *
 	 * @return string
 	 * @throws GuzzleException
@@ -127,14 +149,72 @@ class InbucketHelper {
 		?string $localMailhogUrl,
 		?string $emailAddress,
 		?string $xRequestId = '',
-		array $mailboxes
+		array $mailboxes,
+		?int $emailNumber = 1
 //		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
+	) {
+		foreach ($mailboxes as $mailbox){
+			$mailboxIds = self::getMailboxIds($mailbox);
+			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
+			if(str_contains($response->to[0], $emailAddress)){
+				return $response->body->text;
+			}
+		}
+		throw new Exception("Could not find the email to the address: " . $emailAddress);
+	}
+
+	/**
+	 *
+	 * @param string|null $localMailhogUrl
+	 * @param string|null $emailAddress
+	 * @param string|null $xRequestId
+	 * @param array $mailboxes
+	 *
+	 * @return boolean
+	 */
+	public static function emailReceived(
+		?string $localMailhogUrl,
+		?string $emailAddress,
+		?string $xRequestId,
+		array $mailboxes
+	):bool {
+		try {
+			self::getBodyOfLastEmail(
+				$localMailhogUrl,
+				$emailAddress,
+				$xRequestId,
+				$mailboxes
+			);
+		} catch (Exception $err) {
+			return false;
+		}
+
+		return true;
+	}
+
+
+	/**
+	 *
+	 * @param string|null $localMailhogUrl
+	 * @param string|null $emailAddress
+	 * @param string|null $xRequestId,
+	 * @param array $mailboxes
+	 *
+	 * @return mixed
+	 * @throws GuzzleException
+	 * @throws Exception
+	 */
+	public static function getSenderOfEmail(
+		?string $localMailhogUrl,
+		?string $emailAddress,
+		?string $xRequestId = '',
+		array $mailboxes
 	) {
 		foreach ($mailboxes as $mailbox){
 			$mailboxIds = self::getMailboxIds($mailbox);
 			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - 1]);
 			if(str_contains($response->to[0], $emailAddress)){
-				return $response->body->text;
+				return $response->from;
 			}
 		}
 		throw new Exception("Could not find the email to the address: " . $emailAddress);

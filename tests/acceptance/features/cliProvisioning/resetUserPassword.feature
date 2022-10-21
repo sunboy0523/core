@@ -1,4 +1,4 @@
-@cli @mailhog @skipOnLDAP
+@cli @inbucket @skipOnLDAP
 Feature: reset user password
   As an admin
   I want to be able to reset a user's password
@@ -25,7 +25,7 @@ Feature: reset user password
     And the command output should contain the text "The password reset link is:"
     And the email address "brand.new.user@oc.com.np" should have received an email with the body containing
       """
-      Use the following link to reset your password: <a href=
+      Use the following link to reset your password:
       """
 
   @skipOnOcV10 @skipOnEncryption @issue-36985

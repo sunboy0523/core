@@ -281,16 +281,18 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 	 * @param string $emailAddress
 	 * @param string $regexSearch
 	 * @param string $errorMessage
+	 * @param ?int $emailNumber
 	 *
 	 * @return string
 	 * @throws GuzzleException
 	 */
-	public function getLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage):string {
+	public function getLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage, int $emailNumber = 1):string {
 		$content = \TestHelpers\InbucketHelper::getBodyOfLastEmail(
 			\TestHelpers\InbucketHelper::getLocalInbucketMailUrl(),
 			$emailAddress,
 			$this->featureContext->getStepLineRef(),
-			$this->featureContext->emailRecipients
+			$this->featureContext->emailRecipients,
+			$emailNumber
 		);
 
 		$matches = [];
@@ -304,15 +306,17 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 	 * @param string $emailAddress
 	 * @param string $regexSearch
 	 * @param string $errorMessage
+	 * @param ?int $emailNumber
 	 *
 	 * @return void
 	 * @throws GuzzleException
 	 */
-	public function followLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage):void {
+	public function followLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage , int $emailNumber = 1):void {
 		$link = $this->getLinkFromEmail(
 			$emailAddress,
 			$regexSearch,
 			$errorMessage,
+			$emailNumber
 		);
 		$this->visitPath($link);
 	}
