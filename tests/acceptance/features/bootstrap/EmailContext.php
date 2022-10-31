@@ -33,7 +33,6 @@ require_once 'bootstrap.php';
  * context file for email related steps.
  */
 class EmailContext implements Context {
-	private $localMailhogUrl = null;
 	private $localInbucketUrl = null;
 
 	/**
@@ -41,13 +40,6 @@ class EmailContext implements Context {
 	 * @var FeatureContext
 	 */
 	private $featureContext;
-
-	/**
-	 * @return string
-	 */
-	public function getLocalMailhogUrl():string {
-		return $this->localMailhogUrl;
-	}
 
 	/**
 	 * @return string
@@ -70,29 +62,14 @@ class EmailContext implements Context {
 			$expectedContent,
 			$sender
 		);
-
-		$splitEmailForUserMailBox =  explode("@", $address);
-		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
-
-		$expectedBodyFromLastEmail = InbucketHelper::getBodyOfLastEmail($this->localInbucketUrl,$address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
+		$this->featureContext->pushEmailRecipientAsMailBox($address);
+		$expectedBodyFromLastEmail = InbucketHelper::getBodyOfLastEmail($address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
 		Assert::assertStringContainsString(
 			$expectedContent,
 			$expectedBodyFromLastEmail,
 			"The email address {$address} should have received an email with the body containing {$expectedContent}
 			but the received email is {$expectedBodyFromLastEmail}"
 		);
-
-//		$emailBody = EmailHelper::getBodyOfLastEmail(
-//			$this->localMailhogUrl,
-//			$address,
-//			$this->featureContext->getStepLineRef()
-//		);
-//		Assert::assertStringContainsString(
-//			$expectedContent,
-//			$emailBody,
-//			"The email address {$address} should have received an email with the body containing {$expectedContent}
-//			but the received email is {$emailBody}"
-//		);
 	}
 
 	/**
@@ -152,7 +129,6 @@ class EmailContext implements Context {
 		$user = $this->featureContext->getActualUsername($user);
 		$receiverAddress = $this->featureContext->getEmailAddressForUser($user);
 		$actualSenderAddress = InbucketHelper::getSenderOfEmail(
-			$this->getLocalInbucketUrl(),
 			$receiverAddress,
 			$this->featureContext->getStepLineRef(),
 			$this->featureContext->emailRecipients
@@ -173,11 +149,9 @@ class EmailContext implements Context {
 	 * @throws Exception
 	 */
 	public function assertThatEmailDoesntExistWithTheAddress(string $address):void {
-		$splitEmailForUserMailBox =  explode("@", $address);
-		$this->featureContext->emailRecipients[] = $splitEmailForUserMailBox[0];
+		$this->featureContext->pushEmailRecipientAsMailBox($address);
 		Assert::assertFalse(
 			InbucketHelper::emailReceived(
-				InbucketHelper::getLocalInbucketMailUrl(),
 				$address,
 				$this->featureContext->getStepLineRef(),
 				$this->featureContext->emailRecipients
@@ -187,7 +161,7 @@ class EmailContext implements Context {
 	}
 
 	/**
-	 * @BeforeScenario @mailhog
+	 * @BeforeScenario @inbucket
 	 *
 	 * @param BeforeScenarioScope $scope
 	 *
@@ -199,19 +173,17 @@ class EmailContext implements Context {
 		// Get all the contexts you need in this context
 		$this->featureContext = $environment->getContext('FeatureContext');
 		$this->localInbucketUrl = InbucketHelper::getLocalInbucketMailUrl();
-//		$this->localMailhogUrl= EmailHelper::getLocalMailhogUrl();
 	}
 
 
 	/**
 	 *
-	 * @AfterScenario  @mailhog
+	 * @AfterScenario @inbucket
 	 *
 	 * @return void
 	 */
 	public function clearInbucketMessages():void {
 		try {
-
 			foreach ($this->featureContext->emailRecipients as $emailRecipent){
 				InbucketHelper::deleteAllEmails(
 					$this->getLocalInbucketUrl(),
@@ -222,24 +194,7 @@ class EmailContext implements Context {
 
 		} catch (Exception $e) {
 			echo __METHOD__ .
-				" could not delete mailhog messages, is mailhog set up?\n" .
-				$e->getMessage();
-		}
-	}
-
-	/**
-	 *
-	 * @return void
-	 */
-	protected function clearMailHogMessages():void {
-		try {
-			EmailHelper::deleteAllMessages(
-				$this->getLocalMailhogUrl(),
-				$this->featureContext->getStepLineRef()
-			);
-		} catch (Exception $e) {
-			echo __METHOD__ .
-				" could not delete mailhog messages, is mailhog set up?\n" .
+				" could not delete inbucket messages, is inbucket set up?\n" .
 				$e->getMessage();
 		}
 	}

@@ -2,8 +2,8 @@
 /**
  * ownCloud
  *
- * @author Artur Neumann <artur@jankaritech.com>
- * @copyright Copyright (c) 2017 Artur Neumann artur@jankaritech.com
+ * @author Sagar Gurung <sagar@jankaritech.com>
+ * @copyright Copyright (c) 2022 Sagar Gurung sagar@jankaritech.com
  *
  * This code is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License,
@@ -33,35 +33,36 @@ use Psr\Http\Message\ResponseInterface;
 class InbucketHelper {
 
 	/**
-	 * retrieving emails sent from mailhog
+	 * retrieving emails sent from inbucket
 	 *
 	 * @param string $mailbox
+	 * @param string|null $xRequestId
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getMailboxes (string $mailbox) {
+	public static function getMailboxes (string $mailbox , ?string $xRequestId = null) {
 		$response = HttpRequestHelper::get(
-			 "http://localhost:9100" . "/api/v1/mailbox/${mailbox}",
-			null,
+			 self::getLocalInbucketMailUrl() . "/api/v1/mailbox/${mailbox}",
+			$xRequestId,
 			null,
 			null,
 			['Content-Type' => 'application/json']
 		);
-		$json = json_decode($response->getBody()->getContents());
-		return $json;
+		return json_decode($response->getBody()->getContents());
 	}
 
 	/**
-	 * retrieving emails sent from mailhog
+	 * retrieving all the email id's of mailbox(from email recipient)
 	 *
 	 * @param string $mailbox
+	 * @param string|null $xRequestId
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getMailboxIds (string $mailbox) {
-		$mailboxemailsmetainfo = self::getMailboxes($mailbox);
+	public static function getMailboxIds (string $mailbox, ?string $xRequestId = null) {
+		$mailboxemailsmetainfo = self::getMailboxes($mailbox , $xRequestId);
 		$mailboxIds = [];
 		for ($i = 0; $i < sizeof($mailboxemailsmetainfo); $i++) {
 			$mailboxIds[] = $mailboxemailsmetainfo[$i]->id;
@@ -70,6 +71,8 @@ class InbucketHelper {
 	}
 
 	/**
+	 *
+	 * Deletes all the emails
 	 *
 	 * @param string|null $localInbucketUrl
 	 * @param string|null $xRequestId
@@ -81,7 +84,7 @@ class InbucketHelper {
 	public static function deleteAllEmails(
 		?string $localInbucketUrl,
 		?string $xRequestId,
-		?string $mailbox
+		string $mailbox
 	):ResponseInterface {
 		return HttpRequestHelper::delete(
 			$localInbucketUrl . "/api/v1/mailbox/" .$mailbox,
@@ -91,7 +94,7 @@ class InbucketHelper {
 
 
 	/**
-	 * retrieving emails sent from mailhog
+	 * retrieving content of a specific email with email ID
 	 *
 	 * @param string $mailboxid
 	 * @param string $mailbox
@@ -101,41 +104,18 @@ class InbucketHelper {
 	 */
 	public static function getBodyContentWithID (string $mailbox, string $mailboxid) {
 		$response = HttpRequestHelper::get(
-			"http://localhost:9100" . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
+			self::getLocalInbucketMailUrl() . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
 			null,
 			null,
 			null,
 			['Content-Type' => 'application/json']
 		);
 
-		$json = json_decode($response->getBody()->getContents());
-		return $json;
-	}
-
-	/**
-	 * retrieving emails sent from mailhog
-	 *
-	 * @param string $mailbox
-	 *
-	 * @return mixed JSON encoded contents
-	 * @throws GuzzleException
-	 */
-	public static function getMailbox (string $mailbox) {
-		$response = HttpRequestHelper::get(
-			"http://localhost:9100" . "/api/v1/mailbox/${mailbox}/",
-			null,
-			null,
-			null,
-			['Content-Type' => 'application/json']
-		);
-
-		$json = json_decode($response->getBody()->getContents());
-		return $json;
+		return json_decode($response->getBody()->getContents());
 	}
 
 	/**
 	 *
-	 * @param string|null $localMailhogUrl
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId
 	 * @param array $mailboxes,
@@ -146,15 +126,14 @@ class InbucketHelper {
 	 * @throws Exception
 	 */
 	public static function getBodyOfLastEmail(
-		?string $localMailhogUrl,
 		?string $emailAddress,
-		?string $xRequestId = '',
+		string $xRequestId,
 		array $mailboxes,
 		?int $emailNumber = 1
 //		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
 	) {
 		foreach ($mailboxes as $mailbox){
-			$mailboxIds = self::getMailboxIds($mailbox);
+			$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
 			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
 			if(str_contains($response->to[0], $emailAddress)){
 				return $response->body->text;
@@ -165,7 +144,6 @@ class InbucketHelper {
 
 	/**
 	 *
-	 * @param string|null $localMailhogUrl
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId
 	 * @param array $mailboxes
@@ -173,14 +151,12 @@ class InbucketHelper {
 	 * @return boolean
 	 */
 	public static function emailReceived(
-		?string $localMailhogUrl,
 		?string $emailAddress,
 		?string $xRequestId,
 		array $mailboxes
 	):bool {
 		try {
 			self::getBodyOfLastEmail(
-				$localMailhogUrl,
 				$emailAddress,
 				$xRequestId,
 				$mailboxes
@@ -195,7 +171,6 @@ class InbucketHelper {
 
 	/**
 	 *
-	 * @param string|null $localMailhogUrl
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId,
 	 * @param array $mailboxes
@@ -205,13 +180,12 @@ class InbucketHelper {
 	 * @throws Exception
 	 */
 	public static function getSenderOfEmail(
-		?string $localMailhogUrl,
-		?string $emailAddress,
-		?string $xRequestId = '',
+		string $emailAddress,
+		string $xRequestId,
 		array $mailboxes
 	) {
 		foreach ($mailboxes as $mailbox){
-			$mailboxIds = self::getMailboxIds($mailbox);
+			$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
 			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - 1]);
 			if(str_contains($response->to[0], $emailAddress)){
 				return $response->from;
@@ -222,7 +196,7 @@ class InbucketHelper {
 
 
 	/**
-	 * Returns the host name or address of the Mailhog server as seen from the
+	 * Returns the host name or address of the Inbucket server as seen from the
 	 * point of view of the system-under-test.
 	 *
 	 * @return string
@@ -237,7 +211,7 @@ class InbucketHelper {
 
 
 	/**
-	 * Returns the host name or address of the Mailhog server as seen from the
+	 * Returns the host name or address of the Inbucket server as seen from the
 	 * point of view of the test runner.
 	 *
 	 * @return string
@@ -251,7 +225,7 @@ class InbucketHelper {
 	}
 
 	/**
-	 * Returns the host and port where Mailhog messages can be read and deleted
+	 * Returns the host and port where Inbucket messages can be read and deleted
 	 * by the test runner.
 	 *
 	 * @return string

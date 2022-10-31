@@ -33,6 +33,7 @@ use SensioLabs\Behat\PageObjectExtension\PageObject\Exception\ElementNotFoundExc
 use SensioLabs\Behat\PageObjectExtension\PageObject\Page;
 use TestHelpers\AppConfigHelper;
 use TestHelpers\EmailHelper;
+use TestHelpers\InbucketHelper;
 use TestHelpers\SetupHelper;
 use Page\GeneralErrorPage;
 use Page\GeneralExceptionPage;
@@ -287,8 +288,7 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 	 * @throws GuzzleException
 	 */
 	public function getLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage, int $emailNumber = 1):string {
-		$content = \TestHelpers\InbucketHelper::getBodyOfLastEmail(
-			\TestHelpers\InbucketHelper::getLocalInbucketMailUrl(),
+		$content = InbucketHelper::getBodyOfLastEmail(
 			$emailAddress,
 			$this->featureContext->getStepLineRef(),
 			$this->featureContext->emailRecipients,

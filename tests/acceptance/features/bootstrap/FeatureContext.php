@@ -457,6 +457,18 @@ class FeatureContext extends BehatVariablesContext {
 		}
 	}
 
+	/**
+	 * @param string $emailAddress
+	 *
+	 * @return void
+	 */
+	public function pushEmailRecipientAsMailBox(string $emailAddress):void {
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		if(!in_array($splitEmailForUserMailBox[0] , $this->emailRecipients)){
+			$this->emailRecipients[] = $splitEmailForUserMailBox[0];
+		}
+	}
+
 	/*
 	 * @var Ldap
 	 */
