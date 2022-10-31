@@ -119,7 +119,8 @@ class InbucketHelper {
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId
 	 * @param array $mailboxes,
-	 * @param int $emailNumber
+	 * @param int|null $emailNumber
+	 * @param int|null $waitTimeSec Time to wait for the email
 	 *
 	 * @return string
 	 * @throws GuzzleException
@@ -129,16 +130,28 @@ class InbucketHelper {
 		?string $emailAddress,
 		string $xRequestId,
 		array $mailboxes,
-		?int $emailNumber = 1
-//		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
+		?int $emailNumber = 1,
+		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
 	) {
-		foreach ($mailboxes as $mailbox){
-			$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
-			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
-			if(str_contains($response->to[0], $emailAddress)){
-				return $response->body->text;
+		$currentTime = \time();
+		$endTime = $currentTime + $waitTimeSec;
+		while($currentTime <= $endTime){
+			$skip = 1;
+			foreach ($mailboxes as $mailbox){
+				$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
+				$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
+				if(str_contains($response->to[0], $emailAddress)){
+					if ($skip < $emailNumber) {
+						$skip++;
+						continue;
+					}
+					return $response->body->text;
+				}
 			}
+			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
+			$currentTime = \time();
 		}
+
 		throw new Exception("Could not find the email to the address: " . $emailAddress);
 	}
 
@@ -147,19 +160,23 @@ class InbucketHelper {
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId
 	 * @param array $mailboxes
+	 * @param int|null $waitTimeSec Time to wait for the email
 	 *
 	 * @return boolean
+	 * @throws Exception
 	 */
 	public static function emailReceived(
 		?string $emailAddress,
 		?string $xRequestId,
-		array $mailboxes
+		array $mailboxes,
+		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
 	):bool {
 		try {
 			self::getBodyOfLastEmail(
 				$emailAddress,
 				$xRequestId,
-				$mailboxes
+				$mailboxes,
+				$waitTimeSec
 			);
 		} catch (Exception $err) {
 			return false;
@@ -173,7 +190,9 @@ class InbucketHelper {
 	 *
 	 * @param string|null $emailAddress
 	 * @param string|null $xRequestId,
-	 * @param array $mailboxes
+	 * @param array $mailboxes,
+	 * @param int|null $emailNumber which number of multiple emails to read (first email is 1)
+	 * @param int|null $waitTimeSec Time to wait for the email
 	 *
 	 * @return mixed
 	 * @throws GuzzleException
@@ -182,15 +201,28 @@ class InbucketHelper {
 	public static function getSenderOfEmail(
 		string $emailAddress,
 		string $xRequestId,
-		array $mailboxes
+		array $mailboxes,
+		?int $emailNumber = 1,
+		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
 	) {
-		foreach ($mailboxes as $mailbox){
-			$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
-			$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - 1]);
-			if(str_contains($response->to[0], $emailAddress)){
-				return $response->from;
+		$currentTime = \time();
+		$endTime = $currentTime + $waitTimeSec;
+
+		while($currentTime <= $endTime) {
+			$skip = 1;
+			foreach ($mailboxes as $mailbox){
+				$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
+				$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
+				if(str_contains($response->to[0], $emailAddress)){
+					if ($skip < $emailNumber) {
+						$skip++;
+						continue;
+					}
+					return $response->from;
+				}
 			}
 		}
+
 		throw new Exception("Could not find the email to the address: " . $emailAddress);
 	}
 

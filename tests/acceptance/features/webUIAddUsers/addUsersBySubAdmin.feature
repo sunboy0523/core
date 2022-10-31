@@ -1,4 +1,4 @@
-@webUI @insulated @disablePreviews @mailhog
+@webUI @insulated @disablePreviews @inbucket
 Feature: add users
   As a subadmin
   I want to add users

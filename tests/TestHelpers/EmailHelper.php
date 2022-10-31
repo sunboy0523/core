@@ -260,21 +260,4 @@ class EmailHelper {
 		}
 		return "http://$localMailhogHost:$mailhogPort";
 	}
-
-	/**
-	 * Returns the host and port where Mailhog messages can be read and deleted
-	 * by the test runner.
-	 *
-	 * @return string
-	 */
-	public static function getLocalInbucketMailUrl():string {
-		$localInbucketHost = self::getLocalInbucketHost();
-
-		$inbucketPort = \getenv('INBUCKET_PORT');
-		if ($inbucketPort === false) {
-			$inbucketPort = "8025";
-		}
-		return "http://$localInbucketHost:$inbucketPort";
-	}
-
 }
