@@ -25,7 +25,7 @@ Feature: reset user password
     And the command output should contain the text "The password reset link is:"
     And the email address "brand.new.user@oc.com.np" should have received an email with the body containing
       """
-      Use the following link to reset your password:
+      Use the following link to reset your password: <a href=
       """
 
   @skipOnOcV10 @skipOnEncryption @issue-36985

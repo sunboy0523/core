@@ -161,7 +161,7 @@ class EmailContext implements Context {
 	}
 
 	/**
-	 * @BeforeScenario @inbucket
+	 * @BeforeScenario
 	 *
 	 * @param BeforeScenarioScope $scope
 	 *
@@ -178,7 +178,7 @@ class EmailContext implements Context {
 
 	/**
 	 *
-	 * @AfterScenario @inbucket
+	 * @AfterScenario
 	 *
 	 * @return void
 	 */

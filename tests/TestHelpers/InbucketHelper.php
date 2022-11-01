@@ -145,7 +145,12 @@ class InbucketHelper {
 						$skip++;
 						continue;
 					}
-					return $response->body->text;
+					$body = \str_replace(
+						"\r\n",
+						"\n",
+						\quoted_printable_decode($response->body->html)
+					);
+					return $body;
 				}
 			}
 			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);

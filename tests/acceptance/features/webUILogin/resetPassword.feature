@@ -20,7 +20,7 @@ Feature: reset the password
       """
     And the email address of user "Alice" should have received an email with the body containing
       """
-      Use the following link to reset your password:
+      Use the following link to reset your password: <a href=
       """
 
   @skipOnEncryption @smokeTest @skipOnLDAP @mobileResolutionTest
