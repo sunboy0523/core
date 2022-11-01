@@ -63,12 +63,12 @@ class EmailContext implements Context {
 			$sender
 		);
 		$this->featureContext->pushEmailRecipientAsMailBox($address);
-		$expectedBodyFromLastEmail = InbucketHelper::getBodyOfLastEmail($address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
+		$emailBody = InbucketHelper::getBodyOfLastEmail($address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
 		Assert::assertStringContainsString(
 			$expectedContent,
-			$expectedBodyFromLastEmail,
+			$emailBody,
 			"The email address {$address} should have received an email with the body containing {$expectedContent}
-			but the received email is {$expectedBodyFromLastEmail}"
+			but the received email is {$emailBody}"
 		);
 	}
 

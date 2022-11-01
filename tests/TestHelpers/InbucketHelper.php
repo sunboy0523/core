@@ -148,7 +148,7 @@ class InbucketHelper {
 					$body = \str_replace(
 						"\r\n",
 						"\n",
-						\quoted_printable_decode($response->body->html)
+						\quoted_printable_decode($response->body->text . "\n" . $response->body->html)
 					);
 					return $body;
 				}
