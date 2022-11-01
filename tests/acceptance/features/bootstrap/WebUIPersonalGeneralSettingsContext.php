@@ -25,7 +25,7 @@ use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\MinkExtension\Context\RawMinkContext;
 use Page\PersonalGeneralSettingsPage;
 use PHPUnit\Framework\Assert;
-use TestHelpers\EmailHelper;
+use TestHelpers\InbucketHelper;
 
 require_once 'bootstrap.php';
 
@@ -296,10 +296,11 @@ class WebUIPersonalGeneralSettingsContext extends RawMinkContext implements Cont
 	 * @throws Exception
 	 */
 	public function theUserFollowsTheEmailChangeConfirmationLinkEmail(string $emailAddress):void {
-		$content = EmailHelper::getBodyOfLastEmail(
-			EmailHelper::getLocalMailhogUrl(),
+		$this->featureContext->pushEmailRecipientAsMailBox($emailAddress);
+		$content = InbucketHelper::getBodyOfLastEmail(
 			$emailAddress,
-			$this->featureContext->getStepLineRef()
+			$this->featureContext->getStepLineRef(),
+			$this->featureContext->emailRecipients
 		);
 		$matches = [];
 		\preg_match(

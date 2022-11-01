@@ -28,6 +28,7 @@ use Behat\Mink\Exception\ElementNotFoundException;
 use Behat\Mink\Session;
 use Exception;
 use TestHelpers\EmailHelper;
+use TestHelpers\InbucketHelper;
 
 /**
  * Admin General Settings page.
@@ -96,7 +97,7 @@ class AdminGeneralSettingsPage extends OwncloudPage {
 				$this->checkRequiredAuthentication($row['value']);
 			} elseif ($row['setting'] === 'server address') {
 				if ($row['value'] === "%MAILHOG_HOST%") {
-					$row['value'] = EmailHelper::getMailhogHost();
+					$row['value'] = InbucketHelper::getInbucketHost();
 				}
 				$this->fillField($this->serverAddressFieldId, $row['value']);
 			} elseif ($row['setting'] === 'port') {

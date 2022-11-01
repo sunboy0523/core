@@ -1,4 +1,4 @@
-@webUI @insulated @disablePreviews @mailhog
+@webUI @insulated @disablePreviews @inbucket
 Feature: reset the password using an email address
   As a user
   I want to reset my password using an email address

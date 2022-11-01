@@ -1,4 +1,4 @@
-@webUI @insulated @disablePreviews @mailhog @admin_settings-feature-required
+@webUI @insulated @disablePreviews @inbucket @admin_settings-feature-required
 Feature: admin general settings
   As an admin
   I want to be able to manage general settings on the ownCloud server
@@ -19,7 +19,7 @@ Feature: admin general settings
       | authentication method   | None           |
       | authentication required | false          |
       | server address          | %MAILHOG_HOST% |
-      | port                    | 1025           |
+      | port                    | 2500           |
     And the administrator clicks on send test email in the admin general settings page using the webUI
     Then the email address "admin@owncloud.com" should have received an email with the body containing
       """
@@ -38,7 +38,7 @@ Feature: admin general settings
       | authentication method   | None           |
       | authentication required | true           |
       | server address          | %MAILHOG_HOST% |
-      | port                    | 1025           |
+      | port                    | 2500           |
       | credential name         | mysmtp         |
       | credential password     | SomePwd123     |
     And the administrator clicks on store-credentials in the admin general settings page using the webUI

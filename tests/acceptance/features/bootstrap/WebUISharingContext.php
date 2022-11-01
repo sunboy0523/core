@@ -36,6 +36,7 @@ use Page\SharedWithYouPage;
 use PHPUnit\Framework\Assert;
 use SensioLabs\Behat\PageObjectExtension\PageObject\Exception\ElementNotFoundException;
 use TestHelpers\EmailHelper;
+use TestHelpers\InbucketHelper;
 use TestHelpers\HttpRequestHelper;
 use TestHelpers\SetupHelper;
 
@@ -2292,10 +2293,10 @@ class WebUISharingContext extends RawMinkContext implements Context {
 	 * @throws Exception
 	 */
 	public function theEmailAddressShouldHaveReceivedAnEmailContainingSharedPublicLink(?string $address):void {
-		$content = EmailHelper::getBodyOfLastEmail(
-			EmailHelper::getLocalMailhogUrl(),
+		$content = InbucketHelper::getBodyOfLastEmail(
 			$address,
-			$this->featureContext->getStepLineRef()
+			$this->featureContext->getStepLineRef(),
+			$this->featureContext->emailRecipients
 		);
 		$createdPublicLinks = $this->featureContext->getCreatedPublicLinks();
 		$lastCreatedPublicLink = \end($createdPublicLinks);
