@@ -94,13 +94,13 @@ class InbucketHelper extends EmailHelper {
 	/**
 	 * returns body content of a specific email (mailbox) with email ID (mailbox id)
 	 *
-	 * @param string $mailboxid
 	 * @param string $mailbox
+	 * @param string $mailboxid
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getBodyContentWithID(string $mailboxid, string $mailbox) {
+	public static function getBodyContentWithID(string $mailbox, string $mailboxid) {
 		$response = HttpRequestHelper::get(
 			self::getLocalEmailUrl() . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
 			null,
