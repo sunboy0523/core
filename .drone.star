@@ -1734,7 +1734,7 @@ def acceptance(ctx):
                                     makeParameter = "test-acceptance-cli"
 
                                 if params["emailNeeded"]:
-                                    environment["INBUCKET_HOST"] = "email"
+                                    environment["EMAIL_HOST"] = "email"
 
                                 if params["ldapNeeded"]:
                                     environment["TEST_WITH_LDAP"] = True

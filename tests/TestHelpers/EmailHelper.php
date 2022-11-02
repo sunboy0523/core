@@ -39,11 +39,11 @@ class EmailHelper {
 	 * @return string
 	 */
 	public static function getEmailHost():string {
-		$inbucketHost = \getenv('INBUCKET_HOST');
-		if ($inbucketHost === false) {
-			$inbucketHost = "127.0.0.1";
+		$emailHost = \getenv('EMAIL_HOST');
+		if ($emailHost === false) {
+			$emailHost = "127.0.0.1";
 		}
-		return $inbucketHost;
+		return $emailHost;
 	}
 
 	/**
@@ -53,11 +53,11 @@ class EmailHelper {
 	 * @return string
 	 */
 	public static function getLocalEmailHost():string {
-		$localInbucketHost = \getenv('LOCAL_INBUCKET_HOST');
-		if ($localInbucketHost === false) {
-			$localInbucketHost = self::getEmailHost();
+		$localEmailHost = \getenv('LOCAL_EMAIL_HOST');
+		if ($localEmailHost === false) {
+			$localEmailHost = self::getEmailHost();
 		}
-		return $localInbucketHost;
+		return $localEmailHost;
 	}
 
 	/**
@@ -67,12 +67,12 @@ class EmailHelper {
 	 * @return string
 	 */
 	public static function getLocalEmailUrl():string {
-		$localInbucketHost = self::getLocalEmailHost();
+		$localEmailHost = self::getLocalEmailHost();
 
-		$inbucketPort = \getenv('INBUCKET_PORT');
-		if ($inbucketPort === false) {
-			$inbucketPort = "9000";
+		$emailPort = \getenv('EMAIL_PORT');
+		if ($emailPort === false) {
+			$emailPort = "9000";
 		}
-		return "http://$localInbucketHost:$inbucketPort";
+		return "http://$localEmailHost:$emailPort";
 	}
 }

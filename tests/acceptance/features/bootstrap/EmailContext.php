@@ -161,7 +161,7 @@ class EmailContext implements Context {
 	}
 
 	/**
-	 * @BeforeScenario
+	 * @BeforeScenario @inbucket
 	 *
 	 * @param BeforeScenarioScope $scope
 	 *
@@ -177,18 +177,20 @@ class EmailContext implements Context {
 
 	/**
 	 *
-	 * @AfterScenario
+	 * @AfterScenario @inbucket
 	 *
 	 * @return void
 	 */
 	public function clearInbucketMessages():void {
 		try {
-			foreach ($this->featureContext->emailRecipients as $emailRecipent) {
-				InbucketHelper::deleteAllEmails(
-					$this->getLocalInbucketUrl(),
-					$this->featureContext->getStepLineRef(),
-					$emailRecipent
-				);
+			if (!empty($this->featureContext->emailRecipients)) {
+				foreach ($this->featureContext->emailRecipients as $emailRecipent) {
+					InbucketHelper::deleteAllEmails(
+						$this->getLocalInbucketUrl(),
+						$this->featureContext->getStepLineRef(),
+						$emailRecipent
+					);
+				}
 			}
 		} catch (Exception $e) {
 			echo __METHOD__ .

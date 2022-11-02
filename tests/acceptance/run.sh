@@ -914,25 +914,25 @@ else
 	BEHAT_FILTER_TAGS="${BEHAT_FILTER_TAGS}&&${TEST_TYPE_TAG}"
 fi
 
-# INBUCKET_HOST defines where the system-under-test can find the Inbucket server
+# EMAIL_HOST defines where the system-under-test can find the email server (inbucket)
 # for sending email.
-if [ -z "${INBUCKET_HOST}" ]
+if [ -z "${EMAIL_HOST}" ]
 then
-	INBUCKET_HOST="127.0.0.1"
+	EMAIL_HOST="127.0.0.1"
 fi
 
 # LOCAL_INBUCKET_HOST defines where this test script can find the Inbucket server
 # for sending email. When testing a remote system, the Inbucket server somewhere
 # "in the middle" might have a different host name from the point of view of
 # the test script.
-if [ -z "${LOCAL_INBUCKET_HOST}" ]
+if [ -z "${LOCAL_EMAIL_HOST}" ]
 then
-	LOCAL_INBUCKET_HOST="${INBUCKET_HOST}"
+	LOCAL_EMAIL_HOST="${EMAIL_HOST}"
 fi
 
-if [ -z "${INBUCKET_SMTP_PORT}" ]
+if [ -z "${EMAIL_SMTP_PORT}" ]
 then
-	INBUCKET_SMTP_PORT="2500"
+	EMAIL_SMTP_PORT="2500"
 fi
 
 if [ -z "${SELENIUM_HOST}" ]
@@ -975,8 +975,8 @@ declare -a SETTINGS
 SETTINGS+=("system;;mail_domain;foobar.com")
 SETTINGS+=("system;;mail_from_address;owncloud")
 SETTINGS+=("system;;mail_smtpmode;smtp")
-SETTINGS+=("system;;mail_smtphost;${INBUCKET_HOST}")
-SETTINGS+=("system;;mail_smtpport;${INBUCKET_SMTP_PORT}")
+SETTINGS+=("system;;mail_smtphost;${EMAIL_HOST}")
+SETTINGS+=("system;;mail_smtpport;${EMAIL_SMTP_PORT}")
 SETTINGS+=("app;core;backgroundjobs_mode;webcron")
 SETTINGS+=("system;;sharing.federation.allowHttpFallback;true;boolean")
 SETTINGS+=("system;;grace_period.demo_key.show_popup;false;boolean")

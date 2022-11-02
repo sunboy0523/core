@@ -96,7 +96,7 @@ class AdminGeneralSettingsPage extends OwncloudPage {
 			} elseif ($row['setting'] === 'authentication required') {
 				$this->checkRequiredAuthentication($row['value']);
 			} elseif ($row['setting'] === 'server address') {
-				if ($row['value'] === "%INBUCKET_HOST%") {
+				if ($row['value'] === "%EMAIL_HOST%") {
 					$row['value'] = InbucketHelper::getEmailHost();
 				}
 				$this->fillField($this->serverAddressFieldId, $row['value']);
