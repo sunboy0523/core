@@ -287,7 +287,7 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 	 * @return void
 	 * @throws GuzzleException
 	 */
-	public function followLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage , int $emailNumber = 1):void {
+	public function followLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage, int $emailNumber = 1):void {
 		$link = $this->getLinkFromEmail(
 			$emailAddress,
 			$regexSearch,

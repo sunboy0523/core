@@ -46,7 +46,6 @@ class EmailHelper {
 		return $inbucketHost;
 	}
 
-
 	/**
 	 * Returns the host name or address of the Email server as seen from the
 	 * point of view of the test runner.

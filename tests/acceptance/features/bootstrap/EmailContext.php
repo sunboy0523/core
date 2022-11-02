@@ -98,7 +98,7 @@ class EmailContext implements Context {
 	 * @throws Exception
 	 */
 	public function emailAddressShouldHaveReceivedAnEmailWithBodyContaining(string $address, PyStringNode $content, ?string $user = null):void {
-		$user= $this->featureContext->getActualUsername($user);
+		$user = $this->featureContext->getActualUsername($user);
 		$this->assertThatEmailContains($address, $content, $user);
 	}
 
@@ -175,7 +175,6 @@ class EmailContext implements Context {
 		$this->localInbucketUrl = InbucketHelper::getLocalEmailUrl();
 	}
 
-
 	/**
 	 *
 	 * @AfterScenario
@@ -184,14 +183,13 @@ class EmailContext implements Context {
 	 */
 	public function clearInbucketMessages():void {
 		try {
-			foreach ($this->featureContext->emailRecipients as $emailRecipent){
+			foreach ($this->featureContext->emailRecipients as $emailRecipent) {
 				InbucketHelper::deleteAllEmails(
 					$this->getLocalInbucketUrl(),
 					$this->featureContext->getStepLineRef(),
 					$emailRecipent
 				);
 			}
-
 		} catch (Exception $e) {
 			echo __METHOD__ .
 				" could not delete inbucket messages, is inbucket set up?\n" .

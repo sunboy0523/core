@@ -1,6 +1,6 @@
 ATMOZ_SFTP = "atmoz/sftp"
 DRONE_CLI_ALPINE = "drone/cli:alpine"
-INBUCKET_INBUCKET = 'inbucket/inbucket'
+INBUCKET_INBUCKET = "inbucket/inbucket"
 MINIO_MC_RELEASE_2020_VERSION = "minio/mc:RELEASE.2020-12-10T01-26-17Z"
 OC_CI_ALPINE = "owncloudci/alpine:latest"
 OC_CI_BAZEL_BUILDIFIER = "owncloudci/bazel-buildifier"
