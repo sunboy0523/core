@@ -30,7 +30,7 @@ use Psr\Http\Message\ResponseInterface;
  *
  *
  */
-class InbucketHelper {
+class InbucketHelper extends EmailHelper {
 
 	/**
 	 * retrieving emails sent from inbucket
@@ -43,7 +43,7 @@ class InbucketHelper {
 	 */
 	public static function getMailboxes (string $mailbox , ?string $xRequestId = null) {
 		$response = HttpRequestHelper::get(
-			 self::getLocalInbucketMailUrl() . "/api/v1/mailbox/${mailbox}",
+			 self::getLocalEmailUrl() . "/api/v1/mailbox/${mailbox}",
 			$xRequestId,
 			null,
 			null,
@@ -104,7 +104,7 @@ class InbucketHelper {
 	 */
 	public static function getBodyContentWithID (string $mailbox, string $mailboxid) {
 		$response = HttpRequestHelper::get(
-			self::getLocalInbucketMailUrl() . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
+			self::getLocalEmailUrl() . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
 			null,
 			null,
 			null,
@@ -136,15 +136,10 @@ class InbucketHelper {
 		$currentTime = \time();
 		$endTime = $currentTime + $waitTimeSec;
 		while($currentTime <= $endTime){
-			$skip = 1;
 			foreach ($mailboxes as $mailbox){
 				$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
 				$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
 				if(str_contains($response->to[0], $emailAddress)){
-					if ($skip < $emailNumber) {
-						$skip++;
-						continue;
-					}
 					$body = \str_replace(
 						"\r\n",
 						"\n",
@@ -156,7 +151,6 @@ class InbucketHelper {
 			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
 			$currentTime = \time();
 		}
-
 		throw new Exception("Could not find the email to the address: " . $emailAddress);
 	}
 
@@ -214,66 +208,17 @@ class InbucketHelper {
 		$endTime = $currentTime + $waitTimeSec;
 
 		while($currentTime <= $endTime) {
-			$skip = 1;
 			foreach ($mailboxes as $mailbox){
 				$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
 				$response = self::getBodyContentWithID($mailbox, $mailboxIds[sizeof($mailboxIds) - $emailNumber]);
 				if(str_contains($response->to[0], $emailAddress)){
-					if ($skip < $emailNumber) {
-						$skip++;
-						continue;
-					}
 					return $response->from;
 				}
 			}
+			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
+			$currentTime = \time();
 		}
 
 		throw new Exception("Could not find the email to the address: " . $emailAddress);
-	}
-
-
-	/**
-	 * Returns the host name or address of the Inbucket server as seen from the
-	 * point of view of the system-under-test.
-	 *
-	 * @return string
-	 */
-	public static function getInbucketHost():string {
-		$inbucketHost = \getenv('INBUCKET_HOST');
-		if ($inbucketHost === false) {
-			$inbucketHost = "127.0.0.1";
-		}
-		return $inbucketHost;
-	}
-
-
-	/**
-	 * Returns the host name or address of the Inbucket server as seen from the
-	 * point of view of the test runner.
-	 *
-	 * @return string
-	 */
-	public static function getLocalInbucketHost():string {
-		$localInbucketHost = \getenv('LOCAL_INBUCKET_HOST');
-		if ($localInbucketHost === false) {
-			$localInbucketHost = self::getInbucketHost();
-		}
-		return $localInbucketHost;
-	}
-
-	/**
-	 * Returns the host and port where Inbucket messages can be read and deleted
-	 * by the test runner.
-	 *
-	 * @return string
-	 */
-	public static function getLocalInbucketMailUrl():string {
-		$localInbucketHost = self::getLocalInbucketHost();
-
-		$inbucketPort = \getenv('INBUCKET_PORT');
-		if ($inbucketPort === false) {
-			$inbucketPort = "9100";
-		}
-		return "http://$localInbucketHost:$inbucketPort";
 	}
 }

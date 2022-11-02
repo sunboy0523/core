@@ -18,7 +18,7 @@ Feature: admin general settings
       | mail domain             | foobar.com     |
       | authentication method   | None           |
       | authentication required | false          |
-      | server address          | %MAILHOG_HOST% |
+      | server address          | %INBUCKET_HOST% |
       | port                    | 2500           |
     And the administrator clicks on send test email in the admin general settings page using the webUI
     Then the email address "admin@owncloud.com" should have received an email with the body containing
@@ -37,7 +37,7 @@ Feature: admin general settings
       | mail domain             | foobar.com     |
       | authentication method   | None           |
       | authentication required | true           |
-      | server address          | %MAILHOG_HOST% |
+      | server address          | %INBUCKET_HOST% |
       | port                    | 2500           |
       | credential name         | mysmtp         |
       | credential password     | SomePwd123     |

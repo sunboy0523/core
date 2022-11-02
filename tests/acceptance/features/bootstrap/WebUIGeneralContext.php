@@ -253,29 +253,6 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 		}
 	}
 
-//	/**
-//	 *
-//	 * @param string $emailAddress
-//	 * @param string $regexSearch
-//	 * @param string $errorMessage
-//	 * @param int $numEmails which number of multiple emails to read (first email is 1)
-//	 *
-//	 * @return string
-//	 * @throws GuzzleException
-//	 */
-//	public function getLinkFromEmail(string $emailAddress, string $regexSearch, string $errorMessage, int $numEmails = 1):string {
-//		$content = EmailHelper::getBodyOfEmail(
-//			EmailHelper::getLocalMailhogUrl(),
-//			$emailAddress,
-//			$this->featureContext->getStepLineRef(),
-//			$numEmails
-//		);
-//		$matches = [];
-//		\preg_match($regexSearch, $content, $matches);
-//		Assert::assertArrayHasKey(1, $matches, $errorMessage);
-//		return $matches[1];
-//	}
-
 	/**
 	 * using inbucket mail service
 	 *
@@ -294,7 +271,6 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 			$this->featureContext->emailRecipients,
 			$emailNumber
 		);
-
 		$matches = [];
 		\preg_match($regexSearch, $content, $matches);
 		Assert::assertArrayHasKey(1, $matches, $errorMessage);

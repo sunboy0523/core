@@ -172,7 +172,7 @@ class EmailContext implements Context {
 		$environment = $scope->getEnvironment();
 		// Get all the contexts you need in this context
 		$this->featureContext = $environment->getContext('FeatureContext');
-		$this->localInbucketUrl = InbucketHelper::getLocalInbucketMailUrl();
+		$this->localInbucketUrl = InbucketHelper::getLocalEmailUrl();
 	}
 
 
