@@ -171,11 +171,11 @@ class EmailContext implements Context {
 		// Get all the contexts you need in this context
 		$this->featureContext = $environment->getContext('FeatureContext');
 		$this->localInbucketUrl = InbucketHelper::getLocalEmailUrl();
-		$this->clearInbucketMessages();
 	}
 
 	/**
 	 * Delete all the inbucket emails
+	 * @AfterScenario @inbucket
 	 *
 	 * @return void
 	 */

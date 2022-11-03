@@ -33,6 +33,16 @@ use Psr\Http\Message\ResponseInterface;
 class InbucketHelper extends EmailHelper {
 
 	/**
+	 * @param string $emailAddress
+	 *
+	 * @return string
+	 */
+	public static function getMailBoxFromEmail(string $emailAddress):string {
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		return $splitEmailForUserMailBox[0];
+	}
+
+	/**
 	 * return general response information with mailBox (for foo@example.com, mailBox = foo)
 	 *
 	 * @param string $mailBox
@@ -89,16 +99,6 @@ class InbucketHelper extends EmailHelper {
 	}
 
 	/**
-	 * @param string $emailAddress
-	 *
-	 * @return string
-	 */
-	public static function getMailBoxFromEmail(string $emailAddress):string {
-		$splitEmailForUserMailBox =  explode("@", $emailAddress);
-		return $splitEmailForUserMailBox[0];
-	}
-
-	/**
 	 * Returns the body of the last email according to email number (1 = latest received)
 	 *
 	 * @param string $emailAddress
@@ -122,14 +122,12 @@ class InbucketHelper extends EmailHelper {
 			$mailBox = self::getMailBoxFromEmail($emailAddress);
 			$mailboxId = self::getMailboxIdByEmailNumber($mailBox, $xRequestId, $emailNumber);
 			$response = self::getContentOfAnEmail($mailBox, $mailboxId);
-			if (str_contains($response->to[0], $emailAddress)) {
 				$body = \str_replace(
 					"\r\n",
 					"\n",
 					\quoted_printable_decode($response->body->text . "\n" . $response->body->html)
 				);
 				return $body;
-			}
 			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
 			$currentTime = \time();
 		}
