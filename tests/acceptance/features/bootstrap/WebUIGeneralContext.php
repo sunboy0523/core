@@ -268,7 +268,6 @@ class WebUIGeneralContext extends RawMinkContext implements Context {
 		$content = InbucketHelper::getBodyOfLastEmail(
 			$emailAddress,
 			$this->featureContext->getStepLineRef(),
-			$this->featureContext->emailRecipients,
 			$emailNumber
 		);
 		$matches = [];

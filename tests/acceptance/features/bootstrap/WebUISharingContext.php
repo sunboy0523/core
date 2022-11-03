@@ -2296,7 +2296,6 @@ class WebUISharingContext extends RawMinkContext implements Context {
 		$content = InbucketHelper::getBodyOfLastEmail(
 			$address,
 			$this->featureContext->getStepLineRef(),
-			$this->featureContext->emailRecipients
 		);
 		$createdPublicLinks = $this->featureContext->getCreatedPublicLinks();
 		$lastCreatedPublicLink = \end($createdPublicLinks);

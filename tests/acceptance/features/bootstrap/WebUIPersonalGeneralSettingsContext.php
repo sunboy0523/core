@@ -300,7 +300,6 @@ class WebUIPersonalGeneralSettingsContext extends RawMinkContext implements Cont
 		$content = InbucketHelper::getBodyOfLastEmail(
 			$emailAddress,
 			$this->featureContext->getStepLineRef(),
-			$this->featureContext->emailRecipients
 		);
 		$matches = [];
 		\preg_match(

@@ -63,7 +63,7 @@ class EmailContext implements Context {
 			$sender
 		);
 		$this->featureContext->pushEmailRecipientAsMailBox($address);
-		$emailBody = InbucketHelper::getBodyOfLastEmail($address, $this->featureContext->getStepLineRef(), $this->featureContext->emailRecipients);
+		$emailBody = InbucketHelper::getBodyOfLastEmail($address, $this->featureContext->getStepLineRef());
 		Assert::assertStringContainsString(
 			$expectedContent,
 			$emailBody,
@@ -128,10 +128,9 @@ class EmailContext implements Context {
 	public function theResetEmailSenderEmailAddressShouldBe(string $user, string $senderAddress):void {
 		$user = $this->featureContext->getActualUsername($user);
 		$receiverAddress = $this->featureContext->getEmailAddressForUser($user);
-		$actualSenderAddress = InbucketHelper::getSenderOfEmail(
+		$actualSenderAddress = InbucketHelper::getEmailAddressOfSender(
 			$receiverAddress,
 			$this->featureContext->getStepLineRef(),
-			$this->featureContext->emailRecipients
 		);
 		Assert::assertStringContainsString(
 			$senderAddress,
@@ -151,10 +150,9 @@ class EmailContext implements Context {
 	public function assertThatEmailDoesntExistWithTheAddress(string $address):void {
 		$this->featureContext->pushEmailRecipientAsMailBox($address);
 		Assert::assertFalse(
-			InbucketHelper::emailReceived(
+			InbucketHelper::isEmailReceived(
 				$address,
 				$this->featureContext->getStepLineRef(),
-				$this->featureContext->emailRecipients
 			),
 			"Email exists with email address: {$address} but was not expected to be."
 		);
@@ -173,11 +171,11 @@ class EmailContext implements Context {
 		// Get all the contexts you need in this context
 		$this->featureContext = $environment->getContext('FeatureContext');
 		$this->localInbucketUrl = InbucketHelper::getLocalEmailUrl();
+		$this->clearInbucketMessages();
 	}
 
 	/**
-	 *
-	 * @AfterScenario @inbucket
+	 * Delete all the inbucket emails
 	 *
 	 * @return void
 	 */
@@ -185,7 +183,7 @@ class EmailContext implements Context {
 		try {
 			if (!empty($this->featureContext->emailRecipients)) {
 				foreach ($this->featureContext->emailRecipients as $emailRecipent) {
-					InbucketHelper::deleteAllEmails(
+					InbucketHelper::deleteAllEmailsForAMailbox(
 						$this->getLocalInbucketUrl(),
 						$this->featureContext->getStepLineRef(),
 						$emailRecipent

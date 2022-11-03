@@ -33,17 +33,17 @@ use Psr\Http\Message\ResponseInterface;
 class InbucketHelper extends EmailHelper {
 
 	/**
-	 * retrieving emails sent from inbucket
+	 * return general response information with mailBox (for foo@example.com, mailBox = foo)
 	 *
-	 * @param string $mailbox
+	 * @param string $mailBox
 	 * @param string|null $xRequestId
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getMailboxes(string $mailbox, ?string $xRequestId = null) {
+	public static function getMailboxeInformation(string $mailBox, ?string $xRequestId = null) {
 		$response = HttpRequestHelper::get(
-			self::getLocalEmailUrl() . "/api/v1/mailbox/${mailbox}",
+			self::getLocalEmailUrl() . "/api/v1/mailbox/" . $mailBox,
 			$xRequestId,
 			null,
 			null,
@@ -55,19 +55,16 @@ class InbucketHelper extends EmailHelper {
 	/**
 	 * retrieving all the email id's of mailbox(from email recipient)
 	 *
-	 * @param string $mailbox
+	 * @param string $mailBox
 	 * @param string|null $xRequestId
+	 * @param int|null $emailNumber
 	 *
-	 * @return mixed JSON encoded contents
+	 * @return string
 	 * @throws GuzzleException
 	 */
-	public static function getMailboxIds(string $mailbox, ?string $xRequestId = null) {
-		$mailboxemailsmetainfo = self::getMailboxes($mailbox, $xRequestId);
-		$mailboxIds = [];
-		for ($i = 0; $i < \sizeof($mailboxemailsmetainfo); $i++) {
-			$mailboxIds[] = $mailboxemailsmetainfo[$i]->id;
-		}
-		return $mailboxIds;
+	public static function getMailboxIdByEmailNumber(string $mailBox, ?string $xRequestId = null, ?int $emailNumber = 1): string {
+		$mailBoxResponse = self::getMailboxeInformation($mailBox, $xRequestId);
+		return $mailBoxResponse[\sizeof($mailBoxResponse) - $emailNumber]->id;
 	}
 
 	/**
@@ -75,34 +72,82 @@ class InbucketHelper extends EmailHelper {
 	 *
 	 * @param string|null $localInbucketUrl
 	 * @param string|null $xRequestId
-	 * @param string $mailbox
+	 * @param string $mailBox
 	 *
 	 * @return ResponseInterface
 	 * @throws GuzzleException
 	 */
-	public static function deleteAllEmails(
+	public static function deleteAllEmailsForAMailbox(
 		?string $localInbucketUrl,
 		?string $xRequestId,
-		string $mailbox
+		string $mailBox
 	):ResponseInterface {
 		return HttpRequestHelper::delete(
-			$localInbucketUrl . "/api/v1/mailbox/" . $mailbox,
+			$localInbucketUrl . "/api/v1/mailbox/" . $mailBox,
 			$xRequestId
 		);
 	}
 
 	/**
-	 * returns body content of a specific email (mailbox) with email ID (mailbox id)
+	 * @param string $emailAddress
 	 *
-	 * @param string $mailbox
-	 * @param string $mailboxid
+	 * @return string
+	 */
+	public static function getMailBoxFromEmail(string $emailAddress):string {
+		$splitEmailForUserMailBox =  explode("@", $emailAddress);
+		return $splitEmailForUserMailBox[0];
+	}
+
+	/**
+	 * Returns the body of the last email according to email number (1 = latest received)
+	 *
+	 * @param string $emailAddress
+	 * @param string|null $xRequestId
+	 * @param int|null $emailNumber
+	 * @param int|null $waitTimeSec Time to wait for the email
+	 *
+	 * @return string
+	 * @throws GuzzleException
+	 * @throws Exception
+	 */
+	public static function getBodyOfLastEmail(
+		string $emailAddress,
+		string $xRequestId,
+		?int $emailNumber = 1,
+		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
+	) {
+		$currentTime = \time();
+		$endTime = $currentTime + $waitTimeSec;
+		while ($currentTime <= $endTime) {
+			$mailBox = self::getMailBoxFromEmail($emailAddress);
+			$mailboxId = self::getMailboxIdByEmailNumber($mailBox, $xRequestId, $emailNumber);
+			$response = self::getContentOfAnEmail($mailBox, $mailboxId);
+			if (str_contains($response->to[0], $emailAddress)) {
+				$body = \str_replace(
+					"\r\n",
+					"\n",
+					\quoted_printable_decode($response->body->text . "\n" . $response->body->html)
+				);
+				return $body;
+			}
+			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
+			$currentTime = \time();
+		}
+		throw new Exception("Could not find the email to the address: " . $emailAddress);
+	}
+
+	/**
+	 * returns body content of a specific email (mailBox) with email ID (mailbox Id)
+	 *
+	 * @param string $mailBox
+	 * @param string $mailboxId
 	 *
 	 * @return mixed JSON encoded contents
 	 * @throws GuzzleException
 	 */
-	public static function getBodyContentWithID(string $mailbox, string $mailboxid) {
+	public static function getContentOfAnEmail(string $mailBox, string $mailboxId) {
 		$response = HttpRequestHelper::get(
-			self::getLocalEmailUrl() . "/api/v1/mailbox/${mailbox}/" . $mailboxid,
+			self::getLocalEmailUrl() . "/api/v1/mailbox/" . $mailBox . "/" . $mailboxId,
 			null,
 			null,
 			null,
@@ -113,67 +158,23 @@ class InbucketHelper extends EmailHelper {
 	}
 
 	/**
-	 * Returns the body of the last email according to email number (1 = latest received)
 	 *
-	 * @param string|null $emailAddress
+	 * @param string $emailAddress
 	 * @param string|null $xRequestId
-	 * @param array $mailboxes
-	 * @param int|null $emailNumber
-	 * @param int|null $waitTimeSec Time to wait for the email
-	 *
-	 * @return string
-	 * @throws GuzzleException
-	 * @throws Exception
-	 */
-	public static function getBodyOfLastEmail(
-		?string $emailAddress,
-		string $xRequestId,
-		array $mailboxes,
-		?int $emailNumber = 1,
-		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
-	) {
-		$currentTime = \time();
-		$endTime = $currentTime + $waitTimeSec;
-		while ($currentTime <= $endTime) {
-			foreach ($mailboxes as $mailbox) {
-				$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
-				$response = self::getBodyContentWithID($mailbox, $mailboxIds[\sizeof($mailboxIds) - $emailNumber]);
-				if (str_contains($response->to[0], $emailAddress)) {
-					$body = \str_replace(
-						"\r\n",
-						"\n",
-						\quoted_printable_decode($response->body->text . "\n" . $response->body->html)
-					);
-					return $body;
-				}
-			}
-			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
-			$currentTime = \time();
-		}
-		throw new Exception("Could not find the email to the address: " . $emailAddress);
-	}
-
-	/**
-	 *
-	 * @param string|null $emailAddress
-	 * @param string|null $xRequestId
-	 * @param array $mailboxes
 	 * @param int|null $waitTimeSec Time to wait for the email
 	 *
 	 * @return boolean
 	 * @throws Exception
 	 */
-	public static function emailReceived(
-		?string $emailAddress,
+	public static function isEmailReceived(
+		string $emailAddress,
 		?string $xRequestId,
-		array $mailboxes,
 		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
 	):bool {
 		try {
 			self::getBodyOfLastEmail(
 				$emailAddress,
 				$xRequestId,
-				$mailboxes,
 				$waitTimeSec
 			);
 		} catch (Exception $err) {
@@ -186,38 +187,21 @@ class InbucketHelper extends EmailHelper {
 	/**
 	 * returns the email address of email sender
 	 *
-	 * @param string|null $emailAddress
+	 * @param string $emailAddress email address of the receiver
 	 * @param string|null $xRequestId
-	 * @param array $mailboxes
 	 * @param int|null $emailNumber which number of multiple emails to read (first email is 1)
-	 * @param int|null $waitTimeSec Time to wait for the email
 	 *
 	 * @return mixed
 	 * @throws GuzzleException
 	 * @throws Exception
 	 */
-	public static function getSenderOfEmail(
+	public static function getEmailAddressOfSender(
 		string $emailAddress,
 		string $xRequestId,
-		array $mailboxes,
-		?int $emailNumber = 1,
-		?int $waitTimeSec = EMAIL_WAIT_TIMEOUT_SEC
+		?int $emailNumber = 1
 	) {
-		$currentTime = \time();
-		$endTime = $currentTime + $waitTimeSec;
-
-		while ($currentTime <= $endTime) {
-			foreach ($mailboxes as $mailbox) {
-				$mailboxIds = self::getMailboxIds($mailbox, $xRequestId);
-				$response = self::getBodyContentWithID($mailbox, $mailboxIds[\sizeof($mailboxIds) - $emailNumber]);
-				if (str_contains($response->to[0], $emailAddress)) {
-					return $response->from;
-				}
-			}
-			\usleep(STANDARD_SLEEP_TIME_MICROSEC * 50);
-			$currentTime = \time();
-		}
-
-		throw new Exception("Could not find the email to the address: " . $emailAddress);
+		$mailBox = self::getMailBoxFromEmail($emailAddress);
+		$mailBoxResponse = self::getMailboxeInformation($mailBox, $xRequestId);
+		return $mailBoxResponse[\sizeof($mailBoxResponse) - $emailNumber]->from;
 	}
 }
